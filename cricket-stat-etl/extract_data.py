@@ -1,7 +1,15 @@
 import requests
 import csv
+from google.cloud import storage
 
-#url = url = "https://cricbuzz-cricket.p.rapidapi.com/stats/v1/rankings/batsmen"
+from google.oauth2 import service_account
+
+credentials = service_account.Credentials.from_service_account_file(
+    r'C:/Users/User/Desktop/Projects/data-engineering/service-account-key.json'
+)
+storage_client = storage.Client(credentials=credentials, project='endless-theorem-465911-v8')
+
+url = url = "https://cricbuzz-cricket.p.rapidapi.com/stats/v1/rankings/batsmen"
 
 headers = {
 	"x-rapidapi-key": "eb287e3449msha85d2835e1b3e10p1b7b0cjsn43fd4272ea2f",
@@ -31,6 +39,15 @@ if response.status_code == 200:
             for entry in data:
                 writer.writerow({field:entry.get(field) for field in field_names})
         print(f"Data fetched successfully and written to '{csv_filename}'")
+
+        #upload the csv file to GCS
+        bucket_name = 'nj-bkt-ranking-data'
+        bucket = storage_client.bucket(bucket_name)
+        destination_blob_name = f'{csv_filename}'
+
+        blob = bucket.blob(destination_blob_name)
+        blob.upload_from_filename(csv_filename)
+        print(f"Uploaded '{csv_filename}' to bucket '{bucket_name}' as '{destination_blob_name}'")
     else:
         print("No data available from the API")
 else:
