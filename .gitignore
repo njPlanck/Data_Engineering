@@ -2,3 +2,4 @@ venv/
 service-account-key.json
 *.env
 .dockerignore
+youtube_analytics/config/
